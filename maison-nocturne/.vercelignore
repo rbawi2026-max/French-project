@@ -1,0 +1,10 @@
+data/
+.env
+.env.*
+.openai/
+.sites-runtime/
+*.log
+tests/
+**/*.test.mjs
+**/*.test.ts
+.neon

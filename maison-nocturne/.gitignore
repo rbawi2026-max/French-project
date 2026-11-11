@@ -1,0 +1,14 @@
+node_modules/
+dist/
+.sites-runtime/
+*.log
+.DS_Store
+
+# Tournament credentials and participant results
+data/
+*.log
+.env
+.env.*
+!.env.example
+.vercel/
+.neon
