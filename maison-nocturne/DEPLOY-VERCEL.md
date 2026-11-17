@@ -38,7 +38,7 @@ already excludes runtime data and secrets. `.env.example` is safe to include.
 2. Root Directory: the folder containing `package.json` (usually `.` if you
    uploaded its contents, or `maison-nocturne` if you uploaded the folder).
 3. Framework: **Vite**. Node.js: **24.x**.
-4. The included configuration sets install to `npm install --ignore-scripts`,
+4. The included configuration sets install to `npx --yes pnpm@11.25.0 install --frozen-lockfile --ignore-scripts`,
    build to `npm run build`, and output to `dist`.
 5. Before deploying, add these **server environment variables**:
 
