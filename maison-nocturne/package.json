@@ -8,7 +8,7 @@
     "dev": "vite --host 127.0.0.1",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview --host 127.0.0.1",
-    "test": "node --test src/game.test.ts src/escape/state.test.ts src/escape/clue-access.test.ts src/escape/navigation.test.ts server/tournament.test.mjs server/cloud.test.mjs",
+    "test": "node --test src/game.test.ts src/escape/state.test.ts src/escape/clue-access.test.ts src/escape/navigation.test.ts server/tournament.test.mjs server/proportional.test.mjs server/cloud.test.mjs",
     "start": "node serve.mjs",
     "test:cloud": "node --test server/cloud.test.mjs",
     "db:migrate": "node server/migrate.mjs",

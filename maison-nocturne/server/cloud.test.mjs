@@ -40,18 +40,20 @@ test('database API: concurrent 50 → 30 → 15 → 5 → 1, fresh instances, re
     assert.equal((await request('/api/events',{body:{hostKey:'wrong'}})).status,403);
     assert.equal((await request('/api/events',{body:{hostKey},origin:'https://untrusted.example'})).status,403);
     assert.equal((await request('/api/events',{body:'{broken'})).status,400);
-    const host=await ok('/api/index?route=events',{body:{hostKey,expected:50}});
+    const host=await ok('/api/index?route=events',{body:{hostKey}});
     const base='/api/events/'+host.code;
     const players=await Promise.all(Array.from({length:50},(_,i)=>ok(base+'/join',{body:{name:`Player ${i}`,requestId:`concurrent-request-${i}`}})));
     assert.equal(new Set(players.map(p=>p.playerId)).size,50);
     const duplicate=await ok(base+'/join',{body:{name:'retry',requestId:'concurrent-request-0'}});
     assert.equal(duplicate.playerToken,players[0].playerToken);
-    assert.equal((await request(base+'/join',{body:{name:'Overflow',requestId:'overflow-request-51'}})).status,409);
     assert.equal((await request(base)).status,401);
     assert.equal((await request(base+'/start',{token:players[0].playerToken,body:{}})).status,403);
     let active=players;
     for(let round=0;round<4;round++){
-      await ok(base+'/start',{token:host.hostToken,body:{}});
+      const started=await ok(base+'/start',{token:host.hostToken,body:{}});
+      assert.deepEqual(started.qualificationLimits,[30,15,5,1]);
+      assert.equal(started.startingCount,50);
+      assert.equal((await request(base+'/join',{body:{name:'Late',requestId:'late-request-after-start'}})).status,409);
       assert.equal((await ok(base,{token:host.hostToken})).activeCount,[50,30,15,5][round]);
       const eliminated=players.find(p=>!active.includes(p));
       if(eliminated) assert.equal((await request(base+'/clues',{token:eliminated.playerToken,body:{round,clueId:clues.find(c=>c.room===round).id}})).status,409);
@@ -76,7 +78,7 @@ test('database API: concurrent 50 → 30 → 15 → 5 → 1, fresh instances, re
     assert.equal((await request(base+'/start',{token:host.hostToken,body:{}})).status,409);
     assert.equal((await ok('/api/health')).database,'connected');
 
-    const rehearsal=await ok('/api/events',{body:{hostKey,expected:1}}),r='/api/events/'+rehearsal.code;
+    const rehearsal=await ok('/api/events',{body:{hostKey}}),r='/api/events/'+rehearsal.code;
     const p=await ok(r+'/join',{body:{name:'Cooldown',requestId:'cooldown-request-id'}});
     await ok(r+'/start',{body:{},token:rehearsal.hostToken});
     for(const clue of clues.filter(c=>c.room===0))await ok(r+'/clues',{body:{round:0,clueId:clue.id},token:p.playerToken});
@@ -84,6 +86,30 @@ test('database API: concurrent 50 → 30 → 15 → 5 → 1, fresh instances, re
     assert.equal((await request(r+'/finish',{token:p.playerToken,body:{round:0,answer:'Dress'}})).status,429);
     const closed=await ok(r+'/close',{token:rehearsal.hostToken,body:{}});
     assert.equal(closed.players.filter(p=>p.qualified).length,0);
+
+    // Capacity and an early start are enforced through the same database API.
+    const flexible=await ok('/api/events',{body:{hostKey}}),f='/api/events/'+flexible.code;
+    assert.equal(flexible.event.capacity,60);
+    assert.equal((await request(f+'/start',{token:flexible.hostToken,body:{}})).status,409);
+    const joins=await Promise.all(Array.from({length:61},(_,i)=>request(f+'/join',{body:{name:`Flexible ${i}`,requestId:`flexible-request-${i}`}})));
+    assert.equal(joins.filter(r=>r.status===200).length,60);
+    assert.equal(joins.filter(r=>r.status===409).length,1);
+    const sixty=await ok(f+'/start',{token:flexible.hostToken,body:{}});
+    assert.deepEqual(sixty.qualificationLimits,[36,18,6,1]);
+    assert.equal(sixty.startingCount,60);
+    await ok(f+'/close',{token:flexible.hostToken,body:{}});
+
+    const smaller=await ok('/api/events',{body:{hostKey}}),s='/api/events/'+smaller.code;
+    await Promise.all(Array.from({length:28},(_,i)=>ok(s+'/join',{body:{name:`Smaller ${i}`,requestId:`smaller-request-${i}`}})));
+    const started=await ok(s+'/start',{token:smaller.hostToken,body:{}});
+    assert.deepEqual(started.qualificationLimits,[17,8,3,1]);
+    assert.equal(started.startingCount,28);
+    const reloaded=await ok(s,{token:smaller.hostToken});
+    assert.deepEqual(reloaded.qualificationLimits,[17,8,3,1]);
+    assert.equal((await request(s+'/join',{body:{name:'Late student',requestId:'smaller-late-request'}})).status,409);
+    const noFinishers=await ok(s+'/close',{token:smaller.hostToken,body:{}});
+    assert.equal(noFinishers.status,'finished');
+    assert.equal(noFinishers.players.filter(p=>p.qualified).length,0);
   }finally{await db.close();}
 });
 

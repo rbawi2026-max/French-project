@@ -65,7 +65,7 @@ old external-backend rewrite or a catch-all SPA rewrite.
 ## 4. Test from mobile data
 
 1. On your computer, open `https://YOUR-SITE.vercel.app/host.html`.
-2. Enter the `HOST_KEY` you chose. Set Participants to **1** and create a rehearsal.
+2. Enter the `HOST_KEY` you chose. Create a rehearsal; there is no participant-count field.
 3. Scan its new QR on your phone with Wi-Fi off. Enter a name and join.
 4. Start Room 1 from the host screen. Collect the three clues and answer.
 5. Check that rank, completion time and qualification appear on both screens.
@@ -74,12 +74,12 @@ old external-backend rewrite or a catch-all SPA rewrite.
 8. Test two or more phones together before the actual class.
 
 Your old local QR, local host key and local event codes are separate. They are
-not copied into Neon. Create a **fresh 50-player event** for the class and share
+not copied into Neon. Create a **fresh event** for the class and share
 only its player QR, never the host key or host-access fragment.
 
-All 50 join before you start. Results appear once every active player finishes,
+Start whenever at least one student has joined (maximum 60). Joining closes at start. Results appear once every active player finishes,
 or after the host explicitly closes the round. Unfinished players do not qualify.
-The next room starts only when the host starts it: **50 → 30 → 15 → 5 → 1**.
+The initial joined count sets fixed qualification targets: 60%, 30%, 10%, then one winner. Round to the nearest whole number (halves up), with at least one place. For example: **45 → 27 → 14 → 5 → 1**. Only correct finishers qualify, so early closure can reduce actual qualifiers. No finishers ends the event without a winner. The next room starts only when the host starts it.
 Keep the same browser on each phone; clearing storage loses its participant token.
 
 ## Reliability, fairness and free quotas
@@ -94,10 +94,10 @@ competition, not a tamper-proof exam or precision sports timing system.
 
 There is no server filesystem persistence in cloud mode and no in-memory event
 cache. A cold start reads the saved event from Neon. API responses are not cached.
-The API caps each event at 50 entrants and the database at 100 stored events.
+The API caps each event at 60 entrants and the database at 100 stored events.
 
 The browser polls approximately every 2.5 seconds while a live event is open.
-50 players plus the host use roughly 73,440 polling requests per hour, plus
+60 players plus the host use roughly 87,840 polling requests per hour, plus
 game actions and assets. Close tournament tabs after the event and watch both
 providers' free usage dashboards. Free tiers can pause or limit service when
 quotas are reached, and cold starts can delay the first request. These providers
@@ -109,7 +109,7 @@ do not guarantee unlimited free capacity. No paid plan is required by this code.
 through the real API handler, with 50 concurrent join requests and concurrent
 finishes in every round. By default it uses embedded PostgreSQL (PGlite), which
 serializes connections. It verifies SQL persistence, fresh function instances,
-qualification counts, auth, duplicate retries, cooldowns and QR/config routes.
+qualification counts, auth, duplicate retries, cooldowns and QR/config routes. Additional database scenarios verify the 60-person cap and starting with 28 players. Core tests run all four rounds for every starting group size from 1 to 60.
 
 For full HTTP verification, start the built app on port 5175 and run `npm run verify:live`. This creates and completes a clearly named 50-player QA event, retained as test evidence; do not share its QR with the class. Set `VERIFY_URL` to use another address.
 
@@ -127,8 +127,7 @@ physical-phone load test is still required before the classroom event.
   any old `PUBLIC_URL` pointing to the local computer.
 - **Vercel login appears on phones:** use the public Production URL, not a
   protected preview deployment. Verify participant access before class.
-- **Round cannot start:** all expected places must be filled. Rehearse with 1
-  or 2 participants, not 50 empty places.
+- **Round cannot start:** at least one participant must join. After the first round, only a results screen with eligible qualifiers can start the next round.
 
 ## Official references
 
@@ -136,3 +135,7 @@ physical-phone load test is still required before the classroom event.
 - Vercel Functions: https://vercel.com/docs/functions/runtimes/node-js
 - Neon Free: https://neon.com/pricing
 - Neon Node connection guide: https://neon.com/docs/guides/node
+
+## Updating an existing deployment
+
+Deploy the frontend and API changes together from this project. No database schema change or new environment variable is needed. Existing waiting events use flexible starts. Events already running when this update is deployed retain their original targets. Create a fresh event to demonstrate the new rules.

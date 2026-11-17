@@ -2,7 +2,7 @@
 
 **Free public deployment is now supported:** Vercel Functions + Neon PostgreSQL. Follow [DEPLOY-VERCEL.md](DEPLOY-VERCEL.md). The local server instructions below remain available for same-Wi-Fi demos.
 
-The main experience now has four replacement puzzles, indirect clues, physical clue animations, phone movement controls, touch answer cards and a server-backed 50 → 30 → 15 → 5 → 1 elimination tournament. The original salon remains separately available at `?experience=salon`.
+The main experience now has four replacement puzzles, indirect clues, physical clue animations, phone movement controls, touch answer cards and a server-backed elimination tournament for up to 60 participants with proportional qualification. The original salon remains separately available at `?experience=salon`.
 
 ## Open on this computer
 
@@ -10,9 +10,11 @@ Double-click **Start Museum.command**. Keep the Terminal window and host compute
 
 ## Let phones join
 
-All phones can join over the same Wi-Fi using the network URL printed by the server. Create an event for 50 participants on the host page; it generates an event-specific QR code and shareable link. The QR generator runs locally and does not send participant data to a third-party service. Each phone joins with a unique display name.
+All phones can join over the same Wi-Fi using the network URL printed by the server. Create an event on the host page without entering a participant count; it generates an event-specific QR code and shareable link. The QR generator runs locally and does not send participant data to a third-party service. Each phone joins with a unique display name.
 
-The host starts a round once all expected players have joined. Each subsequent round starts with the previous qualifiers. Round completion is automatic when everyone active finishes; the host can also close a round early with confirmation. Unfinished players do not qualify. The next round does not begin until the host starts it. Results show 30 / 15 / 5 qualifiers, then the single winner. Early closure or a smaller rehearsal can produce fewer qualifiers.
+The host can start Room 1 whenever at least one participant has joined, up to a maximum of 60. Joining closes at that moment. The starting group size freezes the qualification targets: 60% advance to Room 2, 30% to Room 3, 10% to Room 4, then one winner. Percentages always use the original starting group, rounded to the nearest whole number (halves up), with at least one place. Examples: **45 → 27 → 14 → 5 → 1**, **28 → 17 → 8 → 3 → 1**, **60 → 36 → 18 → 6 → 1**. The host lobby shows live projected targets before starting and fixed targets afterwards.
+
+Each subsequent round starts with the previous qualifiers. Round completion is automatic when everyone active finishes; the host can also close a round early with confirmation. Only correct finishers qualify, so early closure can reduce the actual numbers without changing the targets. If nobody finishes, the tournament ends without a winner. The next round does not begin until the host starts it. Waiting events created before this update adopt the new start rule; already-running older events keep their original fixed qualification targets.
 
 The host computer's firewall must permit the server; Wi-Fi client isolation can prevent phones reaching it. Test on the actual venue network before the event. This is a shared online classroom game, not a LAN multiplayer 3D world: each phone renders its own room and the server coordinates starts, records evidence/answers, and ranks finishes.
 
@@ -47,6 +49,7 @@ Private tokens and participant names/results are stored under `data/`, which is 
 - `npm run dev` runs Vite; `npm start` runs the built shared server.
 - `npm run build` performs TypeScript checking and creates `dist/`.
 - `npm test` covers both legacy and new puzzle logic plus the four-stage tournament.
+- `server/proportional.test.mjs` verifies every starting group size from 1 to 60, rounding, closed joins, early closure, frozen targets and legacy event compatibility.
 - `server/tournament.test.mjs` simulates 50 entrants through 30, 15, 5, 1; verifies permissions, progression gates, wrong/missing evidence, idempotency, early closure and persisted results.
 - `src/escape/content.ts` defines room stories, clues, choices, answers and hints. Clue prose avoids literal answers; explanations and historical sources appear after solving.
 

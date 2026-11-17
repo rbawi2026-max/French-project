@@ -2,7 +2,7 @@
 
 **Free public deployment is now supported:** Vercel Functions + Neon PostgreSQL. Follow [DEPLOY-VERCEL.md](DEPLOY-VERCEL.md). The local server instructions below remain available for same-Wi-Fi demos.
 
-Read [TOURNAMENT-README.md](./TOURNAMENT-README.md) for the current four questions, phone controls, QR access, and 50 → 30 → 15 → 5 → 1 tournament. Open `Start Museum.command` to run it.
+Read [TOURNAMENT-README.md](./TOURNAMENT-README.md) for the current four questions, phone controls, QR access, and proportional tournament for up to 60 participants. Open `Start Museum.command` to run it.
 
 The notes below document earlier versions.
 

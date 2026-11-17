@@ -12,7 +12,7 @@ async function api(path,body,token){
 assert.equal((await fetch(base)).status,200);
 assert.equal((await api('/api/health')).database,'connected');
 console.log('PASS: app HTML and live Neon health endpoint');
-const host=await api('/api/events',{hostKey,expected:50});
+const host=await api('/api/events',{hostKey});
 const path='/api/events/'+host.code;
 const players=await Promise.all(Array.from({length:50},(_,i)=>api(path+'/join',{name:`QA ${i+1}`,requestId:`live-verification-${host.code}-${i}`})));
 console.log('PASS: 50 concurrent HTTP joins saved in Neon');

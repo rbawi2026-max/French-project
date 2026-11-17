@@ -16,7 +16,7 @@ export function cloudHandler({getStore, publicUrl}) {
       const path=url.searchParams.has('route')?'/api/'+url.searchParams.get('route'):url.pathname;
       const origin=req.headers.origin;
       if(req.method==='POST' && origin && origin!==new URL(base).origin && origin!==`${new URL(base).protocol}//${host}`) throw new ApiError(403,'Use the game’s own page to submit.');
-      if(req.method==='GET' && path==='/api/config') return send(200,{joinBase:base.replace(/\/$/,'')+'/',addresses:[],local:base,rounds:[50,30,15,5,1]});
+      if(req.method==='GET' && path==='/api/config') return send(200,{joinBase:base.replace(/\/$/,'')+'/',addresses:[],local:base,capacity:60,qualificationPercentages:[60,30,10]});
       if(req.method==='GET' && path==='/api/health') {
         const store=getStore(); await store.pool.query('SELECT 1 FROM couture_events LIMIT 1');
         return send(200,{app:'lost-couture-collection',database:'connected'});
